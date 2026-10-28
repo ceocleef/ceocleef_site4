@@ -1,0 +1,25 @@
+<!doctype html><html lang="ru"><head><title>Корзина — ceocleef</title><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
+<header><a class="logo" href="index.html">ceocleef</a><nav><a href="catalog.html">Каталог</a><a href="cart.html">Корзина (<span id="cart-count">0</span>)</a></nav></header>
+<section class="block"><h2>Корзина</h2><div id="cart"></div></section>
+<section class="block" id="checkout" hidden><h2>Оформление</h2>
+<form id="order-form">
+<label>ФИО получателя<input type="text" name="name" required autocomplete="name"></label>
+<label>Телефон<input type="tel" name="phone" required pattern="[0-9+()\s-]{10,}" placeholder="+380..." autocomplete="tel"></label>
+<fieldset><legend>Доставка</legend>
+<label><input type="radio" name="delivery" value="Новая почта" checked> Новая почта</label>
+<label><input type="radio" name="delivery" value="Укрпочта"> Укрпочта</label></fieldset>
+<label>Город<input type="text" name="city" required autocomplete="address-level2"></label>
+<label>Номер отделения или индекс<input type="text" name="branch" required></label>
+<fieldset><legend>Оплата</legend>
+<label><input type="radio" name="payment" value="При получении" checked> При получении (наложенный платёж)</label>
+<label><input type="radio" name="payment" value="Полная предоплата" disabled> Полная предоплата (онлайн-оплата подключается позже)</label>
+<div class="chips"><span>Карты любых банков: скоро</span><span>Apple Pay: скоро</span><span>Google Pay: скоро</span></div></fieldset>
+<label>Комментарий (необязательно)<textarea name="comment" rows="3"></textarea></label>
+<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+<button class="btn" type="submit">Оформить заказ</button>
+</form>
+</section>
+<section class="block"><div class="notice" id="result" hidden><b id="result-title"></b><p id="result-text" style="margin:8px 0 0;font-size:15px"></p></div></section>
+<footer><span class="logo">ceocleef</span><a href="#">Instagram</a></footer>
+<script src="data.js"></script><script src="app.js"></script><script>initCart()</script>
+</body></html>
