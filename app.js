@@ -117,4 +117,5 @@ function initCart() {
     box.scrollIntoView();
   });
 }
-updateCartCount();
+updateCartCount();document.querySelectorAll("footer a").forEach(a => { a.href = "https://www.instagram.com/ceocleef/"; a.target = "_blank"; a.rel = "noopener"; });
+
