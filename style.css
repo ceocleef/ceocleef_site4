@@ -76,3 +76,6 @@ fieldset label{display:flex;align-items:center;gap:10px;font-size:15px}
 form .btn{width:100%;flex:none}
 
 .notice.ok{border-color:var(--ink)}.notice.ok b{color:var(--ink)}
+.ph{position:relative}
+.badge{position:absolute;top:8px;left:8px;z-index:1;background:var(--ink);color:var(--bg);font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;padding:4px 8px}
+.card.sold img{opacity:.55}
