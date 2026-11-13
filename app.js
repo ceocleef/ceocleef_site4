@@ -3,8 +3,8 @@ const fmt = n => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ") + " ₴";
 function renderGrid(el, filter) {
   const items = PRODUCTS.filter(p => !filter || p.collection === filter);
   el.innerHTML = items.map(p => `
-    <a class="card" href="product.html?id=${p.id}">
-      <div class="ph"><img src="${p.images[0]}" alt="${p.name}" loading="lazy"></div>
+    <a class="card${p.soldOut ? " sold" : ""}" href="product.html?id=${p.id}">
+      <div class="ph">${p.soldOut ? '<span class="badge">SOLD OUT</span>' : ""}<img src="${p.images[0]}" alt="${p.name}" loading="lazy"></div>
       <div class="card-name">${p.name}</div>
       <div class="card-price">${fmt(p.price)}</div>
     </a>`).join("");
@@ -14,6 +14,7 @@ function renderProduct(el) {
   const id = new URLSearchParams(location.search).get("id");
   const p = PRODUCTS.find(x => x.id === id);
   if (!p) { el.innerHTML = "<p>Товар не найден. <a href='catalog.html'>В каталог</a></p>"; return; }
+  const sold = !!p.soldOut;
   document.title = p.name + " — ceocleef";
   el.innerHTML = `
     <div class="gallery"><div class="ph tall"><img id="main-img" src="${p.images[0]}" alt="${p.name}"></div>
@@ -22,14 +23,14 @@ function renderProduct(el) {
       <div class="eyebrow">${p.collection}</div>
       <h1 class="h1">${p.name}</h1>
       <div class="price">${fmt(p.price)}</div>
-      <div class="eyebrow">Размер</div>
-      <div class="sizes">${p.sizes.map((s, i) => `<button class="size" aria-pressed="${i === 0}">${s}</button>`).join("")}</div>
-      <button class="btn" id="add">В корзину</button>
+      ${sold ? "" : `<div class="eyebrow">Размер</div>
+      <div class="sizes">${p.sizes.map((s, i) => `<button class="size" aria-pressed="${i === 0}">${s}</button>`).join("")}</div>`}
+      <button class="btn" id="add"${sold ? " disabled" : ""}>${sold ? "SOLD OUT" : "В корзину"}</button>
       <p class="desc" id="added" hidden>Добавлено. <a href="cart.html" style="text-decoration:underline">Перейти в корзину</a></p>
       <p class="desc">${p.description}</p>
     </div>`;
   el.querySelectorAll(".thumb").forEach(t => t.addEventListener("click", () => { document.getElementById("main-img").src = t.dataset.src; }));
-  document.getElementById("add").addEventListener("click", () => {
+  if (!sold) document.getElementById("add").addEventListener("click", () => {
     const size = el.querySelector('.size[aria-pressed="true"]').textContent;
     addToCart(p.id, size);
     document.getElementById("added").hidden = false;
@@ -45,6 +46,8 @@ const CART_KEY = "ceocleef_cart";
 function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { return []; } }
 function saveCart(c) { try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch (e) {} updateCartCount(); }
 function addToCart(id, size) {
+  const prod = PRODUCTS.find(x => x.id === id);
+  if (!prod || prod.soldOut) return;
   const c = getCart();
   const line = c.find(l => l.id === id && l.size === size);
   if (line) line.qty = Math.min(10, line.qty + 1); else c.push({ id, size, qty: 1 });
@@ -56,7 +59,7 @@ function updateCartCount() {
   if (el) el.textContent = n;
 }
 function cartLines() {
-  return getCart().map(l => ({ ...l, p: PRODUCTS.find(x => x.id === l.id) })).filter(l => l.p);
+  return getCart().map(l => ({ ...l, p: PRODUCTS.find(x => x.id === l.id) })).filter(l => l.p && !l.p.soldOut);
 }
 function cartTotal() { return cartLines().reduce((s, l) => s + l.p.price * l.qty, 0); }
 
@@ -117,5 +120,6 @@ function initCart() {
     box.scrollIntoView();
   });
 }
-updateCartCount();document.querySelectorAll("footer a").forEach(a => { a.href = "https://www.instagram.com/ceocleef/"; a.target = "_blank"; a.rel = "noopener"; });
+updateCartCount();
 
+document.querySelectorAll("footer a").forEach(a => { a.href = "https://www.instagram.com/ceocleef/"; a.target = "_blank"; a.rel = "noopener"; });
