@@ -3,8 +3,23 @@
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
 
+const clean = env => ({
+  token: String(env.BOT_TOKEN || "").trim(),
+  chat: String(env.CHAT_ID || "").trim().replace(/^id:\s*/i, "")
+});
+
+async function tg(token, method, payload) {
+  const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload || {})
+  });
+  let j = {};
+  try { j = await r.json(); } catch {}
+  return { ok: r.ok && j.ok === true, description: j.description || ("HTTP " + r.status) };
+}
+
 async function handleOrder(request, env) {
-  if (!env.BOT_TOKEN || !env.CHAT_ID) return json({ ok: false, error: "not_configured" }, 500);
+  const { token, chat } = clean(env);
+  if (!token || !chat) return json({ ok: false, error: "not_configured" }, 500);
   let d;
   try { d = await request.json(); } catch { return json({ ok: false, error: "bad_json" }, 400); }
   if (d.website) return json({ ok: true });
@@ -29,17 +44,24 @@ async function handleOrder(request, env) {
     `Оплата: ${payment}`, `Комментарий: ${comment || "—"}`
   ].join("\n");
 
-  const r = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: env.CHAT_ID, text })
-  });
-  if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502);
+  const res = await tg(token, "sendMessage", { chat_id: chat, text });
+  if (!res.ok) return json({ ok: false, error: "telegram_failed", detail: res.description }, 502);
   return json({ ok: true });
+}
+
+// Проверка настроек: открой /api/check в браузере. Секреты не показывает.
+async function handleCheck(env) {
+  const { token, chat } = clean(env);
+  if (!token || !chat) return json({ hasToken: !!token, hasChatId: !!chat });
+  const me = await tg(token, "getMe");
+  const c = await tg(token, "getChat", { chat_id: chat });
+  return json({ botOk: me.ok, botInfo: me.ok ? "ok" : me.description, chatOk: c.ok, chatInfo: c.ok ? "ok" : c.description });
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/check") return handleCheck(env);
     if (url.pathname === "/api/order") {
       if (request.method !== "POST") return json({ ok: false }, 405);
       return handleOrder(request, env);
